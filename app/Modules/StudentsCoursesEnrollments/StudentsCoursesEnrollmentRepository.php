@@ -2,32 +2,27 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Courses;
+namespace App\Modules\StudentsCoursesEnrollments;
 
 use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 
 
-class CourseRepository
+class StudentsCoursesEnrollmentRepository
 {
 
-    private $tableName = 'courses';
+    private $tableName = "students_courses_enrollments";
     private $selectColumns = [
-        "courses.id",
-        "courses.name",
-        "courses.capacity",
-        "(
-            SELECT COUNT(*)
-            FROM students_courses_enrollments
-            WHERE students_courses_enrollments.course_id = courses.id
-            AND students_courses_enrollments.deleted_at IS NULL
-        ) AS total_students_enrolled",
-        "courses.deleted_at AS deletedAt",
-        "courses.created_at AS createdAt",
-        "courses.updated_at AS updatedAt"
+        "students_courses_enrollments.id",
+        "students_courses_enrollments.student_id AS studentId",
+        "students_courses_enrollments.course_id AS courseId",
+        "students_courses_enrollments.enrolled_by_user_id AS enrolledByUserId",
+        "students_courses_enrollments.deleted_at AS deletedAt",
+        "students_courses_enrollments.created_at AS createdAt",
+        "students_courses_enrollments.updated_at AS updatedAt"
     ];
 
-    public function get(int $id): Course
+    public function get(int $id): StudentsCoursesEnrollment
     {
         $selectColumns = implode(", ", $this->selectColumns);
 
@@ -36,12 +31,11 @@ class CourseRepository
                   WHERE id=:id AND deleted_at IS NULL";
 
         $result = json_decode(json_encode(DB::selectOne($query, ['id' => $id])), true);
-       
         if ($result) {
-            return CourseMapper::mapFrom($result);
+            return StudentsCoursesEnrollmentMapper::mapFrom($result);
         }
 
-        throw new \Exception("Course not found");
+        throw new InvalidArgumentException("Invalid students courses enrollments id.");
     }
     public function getAll(): array
     {
@@ -54,21 +48,21 @@ class CourseRepository
         );
         if ($result) {
             return array_map(function ($row) {
-                return CourseMapper::mapFrom($row)->toArray();
+                return StudentsCoursesEnrollmentMapper::mapFrom($row)->toArray();
             }, $result);
         }
-        throw new \Exception("No Courses found .");
+        throw new \Exception("No students courses enrollments found .");
     }
    
-    public function update(Course $Course): Course
+    public function update(StudentsCoursesEnrollment $enrollment): StudentsCoursesEnrollment
     {
-        return DB::transaction(function () use ($Course) {
+        return DB::transaction(function () use ($enrollment) {
             DB::table($this->tableName)->updateOrInsert([
-                "id" => $Course->getId()
-            ], $Course->toSQL());
-            $id = ($Course->getId() === null || $Course->getId() === 0)
+                "id" => $enrollment->getId()
+            ], $enrollment->toSQL());
+            $id = ($enrollment->getId() === null || $enrollment->getId() === 0)
                 ? (int)DB::getPdo()->lastInsertId()
-                : $Course->getId();
+                : $enrollment->getId();
 
             return $this->get($id);
         });
@@ -85,7 +79,7 @@ class CourseRepository
             ]);
     
         if ($updated === 0) {
-            throw new InvalidArgumentException('Course not found or already deleted.');
+            throw new InvalidArgumentException('Invalid students courses enrollments Id.');
         }
     
         return true;
@@ -101,7 +95,7 @@ class CourseRepository
             ]);
     
         if ($restored === 0) {
-            throw new InvalidArgumentException('Course not found or not deleted.');
+            throw new InvalidArgumentException('enrollments Id not found or not deleted.');
         }
     
         return true;
@@ -114,7 +108,7 @@ class CourseRepository
             ->delete();
     
         if ($deleted === 0) {
-            throw new InvalidArgumentException('Course not found.');
+            throw new InvalidArgumentException('enrollments not found .');
         }
     
         return true;

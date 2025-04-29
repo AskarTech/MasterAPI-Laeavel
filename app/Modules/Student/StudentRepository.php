@@ -116,19 +116,20 @@ class StudentRepository
     public function getByCourseId(int $courseId):array
     {
         $selectColumns=implode(",",$this->selectColumns);
-        $query = "SELECT $selectColumns FROM $this->tableName JOIN students_courses_enrollments ON students_courses_enrollments.courses_id = :courseId
-                    WHERE $this->tableName.id= students_courses_enrollments.students_id
+        $query = "SELECT $selectColumns FROM $this->tableName JOIN students_courses_enrollments ON students_courses_enrollments.course_id = :courseId
+                    WHERE $this->tableName.id= students_courses_enrollments.student_id
                     AND students_courses_enrollments.deleted_at IS NULL";
         $result = json_decode(json_encode(
             DB::select($query, ['courseId' => $courseId])), true
 
         );
-        if ($result) {
-            return array_map(function ($row) {
-                return StudentMapper::mapFrom($row);
-            }, $result);
-        }
-        throw new \Exception("No students found for course ID $courseId.");
+        if (count($result) === 0) {
+            return [];
+         }
+ 
+         return array_map(function ($row) {
+             return StudentMapper::mapFrom($row);
+         }, $result);
     }
 
     public function softDelete(int $id): bool

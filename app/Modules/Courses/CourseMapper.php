@@ -8,7 +8,7 @@ use App\Modules\Common\MyHelpers;
 
 class CourseMapper
 {
-    public static function mapFrom(array $data) : Course
+    public static function mapFrom(array $data) :Course
     {
         return new Course(
             MyHelpers::nullStringToInt($data["id"]?? null),

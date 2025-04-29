@@ -1,5 +1,7 @@
 <?php
-declare(strict_types=1); 
+
+declare(strict_types=1);
+
 namespace App\Modules\Core;
 
 abstract class HTTPResponseCodes
@@ -27,5 +29,4 @@ abstract class HTTPResponseCodes
         "code" => 400,
         "message" => "Server failed to process your request."
     ];
-
 }
